@@ -45,6 +45,7 @@ android {
         // We test with primitives such as Rect, and rely on their default behaviour working.
         unitTests.returnDefaultValues = true
     }
+    buildToolsVersion '26.0.2'
 }
 
 task sourceJar(type: Jar) {

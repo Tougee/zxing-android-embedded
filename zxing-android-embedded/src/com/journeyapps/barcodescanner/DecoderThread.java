@@ -30,6 +30,7 @@ public class DecoderThread {
     private Rect cropRect;
     private boolean running = false;
     private final Object LOCK = new Object();
+    private boolean justPreview;
 
     private final Handler.Callback callback = new Handler.Callback() {
         @Override
@@ -66,6 +67,10 @@ public class DecoderThread {
 
     public void setCropRect(Rect cropRect) {
         this.cropRect = cropRect;
+    }
+
+    public void setJustPreview(boolean justPreview) {
+        this.justPreview = justPreview;
     }
 
     /**
@@ -108,7 +113,14 @@ public class DecoderThread {
             synchronized (LOCK) {
                 if (running) {
                     // Post to our thread.
-                    handler.obtainMessage(R.id.zxing_decode, sourceData).sendToTarget();
+                    if (justPreview) {
+                        if (resultHandler != null) {
+                            Message message = Message.obtain(resultHandler, R.id.zxing_just_preview, sourceData);
+                            message.sendToTarget();
+                        }
+                    } else  {
+                        handler.obtainMessage(R.id.zxing_decode, sourceData).sendToTarget();
+                    }
                 }
             }
         }

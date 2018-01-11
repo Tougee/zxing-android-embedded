@@ -1,11 +1,16 @@
 buildscript {
     repositories {
         jcenter()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.android.tools.build:gradle:3.0.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.10"
     }
 }
 
@@ -21,4 +26,13 @@ subprojects {
     ext.androidBuildTools = '25.0.2'
     ext.androidTargetSdk = 25
     ext.zxingCore = 'com.google.zxing:core:3.3.0'
+    ext.kotlin_version = '1.2.0'
+    ext.anko_version = '0.10.4'
+}
+
+repositories {
+    maven {
+        url 'https://maven.google.com/'
+        name 'Google'
+    }
 }

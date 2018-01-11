@@ -25,4 +25,10 @@ public interface BarcodeCallback {
      * @param resultPoints points potentially identifying a barcode
      */
     void possibleResultPoints(List<ResultPoint> resultPoints);
+
+    /**
+     * Barcode is in simple preview mode.
+     * @param sourceData camera preview data wrapper
+     */
+    void preview(SourceData sourceData);
 }

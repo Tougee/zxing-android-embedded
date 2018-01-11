@@ -3,10 +3,10 @@ package com.journeyapps.barcodescanner;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.hardware.Camera;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.DecodeHintType;
@@ -24,18 +24,17 @@ import java.util.Set;
 
 /**
  * Encapsulates BarcodeView, ViewfinderView and status text.
- *
+ * <p>
  * To customize the UI, use BarcodeView and ViewfinderView directly.
  */
 public class DecoratedBarcodeView extends FrameLayout {
     private BarcodeView barcodeView;
     private ViewfinderView viewFinder;
-    private TextView statusView;
 
     /**
      * The instance of @link TorchListener to send events callback.
      */
-    private TorchListener torchListener;
+    private BarcodeListener barcodeListener;
 
     private class WrappedCallback implements BarcodeCallback {
         private BarcodeCallback delegate;
@@ -55,6 +54,11 @@ public class DecoratedBarcodeView extends FrameLayout {
                 viewFinder.addPossibleResultPoint(point);
             }
             delegate.possibleResultPoints(resultPoints);
+        }
+
+        @Override
+        public void preview(SourceData sourceData) {
+            delegate.preview(sourceData);
         }
     }
 
@@ -93,26 +97,24 @@ public class DecoratedBarcodeView extends FrameLayout {
 
         if (barcodeView == null) {
             throw new IllegalArgumentException(
-                "There is no a com.journeyapps.barcodescanner.BarcodeView on provided layout " +
-                "with the id \"zxing_barcode_surface\".");
+                    "There is no a com.journeyapps.barcodescanner.BarcodeView on provided layout " +
+                            "with the id \"zxing_barcode_surface\".");
         }
 
         // Pass on any preview-related attributes
         barcodeView.initializeAttributes(attrs);
+        initSetting(Camera.CameraInfo.CAMERA_FACING_BACK);
 
 
         viewFinder = (ViewfinderView) findViewById(R.id.zxing_viewfinder_view);
 
         if (viewFinder == null) {
             throw new IllegalArgumentException(
-                "There is no a com.journeyapps.barcodescanner.ViewfinderView on provided layout " +
-                "with the id \"zxing_viewfinder_view\".");
+                    "There is no a com.journeyapps.barcodescanner.ViewfinderView on provided layout " +
+                            "with the id \"zxing_viewfinder_view\".");
         }
 
         viewFinder.setCameraPreview(barcodeView);
-
-        // statusView is optional
-        statusView = (TextView) findViewById(R.id.zxing_status_view);
     }
 
     /**
@@ -132,18 +134,8 @@ public class DecoratedBarcodeView extends FrameLayout {
         Set<BarcodeFormat> decodeFormats = DecodeFormatManager.parseDecodeFormats(intent);
         Map<DecodeHintType, Object> decodeHints = DecodeHintManager.parseDecodeHints(intent);
 
-        CameraSettings settings = new CameraSettings();
-
         if (intent.hasExtra(Intents.Scan.CAMERA_ID)) {
-            int cameraId = intent.getIntExtra(Intents.Scan.CAMERA_ID, -1);
-            if (cameraId >= 0) {
-                settings.setRequestedCameraId(cameraId);
-            }
-        }
-
-        String customPromptMessage = intent.getStringExtra(Intents.Scan.PROMPT_MESSAGE);
-        if (customPromptMessage != null) {
-            setStatusText(customPromptMessage);
+            initSetting(intent.getIntExtra(Intents.Scan.CAMERA_ID, -1));
         }
 
         // Check to see if the scan should be inverted.
@@ -154,15 +146,15 @@ public class DecoratedBarcodeView extends FrameLayout {
         MultiFormatReader reader = new MultiFormatReader();
         reader.setHints(decodeHints);
 
-        barcodeView.setCameraSettings(settings);
         barcodeView.setDecoderFactory(new DefaultDecoderFactory(decodeFormats, decodeHints, characterSet, inverted));
     }
 
-    public void setStatusText(String text) {
-        // statusView is optional when using a custom layout
-        if(statusView != null) {
-            statusView.setText(text);
+    private void initSetting(int cameraId) {
+        CameraSettings settings = new CameraSettings();
+        if (cameraId >= 0) {
+            settings.setRequestedCameraId(cameraId);
         }
+        barcodeView.setCameraSettings(settings);
     }
 
     /**
@@ -194,10 +186,6 @@ public class DecoratedBarcodeView extends FrameLayout {
         return viewFinder;
     }
 
-    public TextView getStatusView() {
-        return statusView;
-    }
-
     /**
      * @see BarcodeView#decodeSingle(BarcodeCallback)
      */
@@ -218,8 +206,8 @@ public class DecoratedBarcodeView extends FrameLayout {
     public void setTorchOn() {
         barcodeView.setTorch(true);
 
-        if (torchListener != null) {
-            torchListener.onTorchOn();
+        if (barcodeListener != null) {
+            barcodeListener.onTorchOn();
         }
     }
 
@@ -229,14 +217,38 @@ public class DecoratedBarcodeView extends FrameLayout {
     public void setTorchOff() {
         barcodeView.setTorch(false);
 
-        if (torchListener != null) {
-            torchListener.onTorchOff();
+        if (barcodeListener != null) {
+            barcodeListener.onTorchOff();
+        }
+    }
+
+    /**
+     * Switch the device's camera front
+     */
+    public void switchCamera() {
+        if (Camera.getNumberOfCameras() == 1) {
+            return;
+        }
+        if (getBarcodeView().isActive()) {
+            barcodeView.pause();
+        }
+        CameraSettings settings = getBarcodeView().getCameraSettings();
+        if (settings.getRequestedCameraId() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+            settings.setRequestedCameraId(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        } else {
+            settings.setRequestedCameraId(Camera.CameraInfo.CAMERA_FACING_BACK);
+        }
+        getBarcodeView().setCameraSettings(settings);
+        barcodeView.resume();
+
+        if (barcodeListener != null) {
+            barcodeListener.onCameraSwitch();
         }
     }
 
     /**
      * Handles focus, camera, volume up and volume down keys.
-     *
+     * <p>
      * Note that this view is not usually focused, so the Activity should call this directly.
      */
     @Override
@@ -257,17 +269,19 @@ public class DecoratedBarcodeView extends FrameLayout {
         return super.onKeyDown(keyCode, event);
     }
 
-    public void setTorchListener(TorchListener listener) {
-        this.torchListener = listener;
+    public void setBarcodeListener(BarcodeListener listener) {
+        this.barcodeListener = listener;
     }
 
     /**
      * The Listener to torch/fflashlight events (turn on, turn off).
      */
-    public interface TorchListener {
+    public interface BarcodeListener {
 
         void onTorchOn();
 
         void onTorchOff();
+
+        void onCameraSwitch();
     }
 }

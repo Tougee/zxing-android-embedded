@@ -89,6 +89,11 @@ public class CaptureManager {
         public void possibleResultPoints(List<ResultPoint> resultPoints) {
 
         }
+
+        @Override
+        public void preview(SourceData sourceData) {
+
+        }
     };
 
     private final CameraPreview.StateListener stateListener = new CameraPreview.StateListener() {

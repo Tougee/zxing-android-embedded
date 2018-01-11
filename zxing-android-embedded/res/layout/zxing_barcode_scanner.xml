@@ -2,20 +2,12 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <com.journeyapps.barcodescanner.BarcodeView
+        android:id="@+id/zxing_barcode_surface"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/zxing_barcode_surface"/>
+        android:layout_height="match_parent" />
 
-    <com.journeyapps.barcodescanner.ViewfinderView
+    <com.journeyapps.barcodescanner.EmptyViewfinderView
+        android:id="@+id/zxing_viewfinder_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/zxing_viewfinder_view"/>
-
-    <TextView android:id="@+id/zxing_status_view"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_gravity="bottom|center_horizontal"
-              android:background="@color/zxing_transparent"
-              android:text="@string/zxing_msg_default_status"
-              android:textColor="@color/zxing_status_text"/>
+        android:layout_height="match_parent" />
 </merge>
