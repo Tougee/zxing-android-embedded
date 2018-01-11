@@ -1,16 +1,18 @@
 package com.touge.sample
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
+import com.journeyapps.barcodescanner.BarcodeResult
+import com.journeyapps.barcodescanner.CaptureManager
+import com.journeyapps.barcodescanner.CaptureManagerCallback
+import com.journeyapps.barcodescanner.SourceData
 import kotlinx.android.synthetic.main.activity_main.*
-import one.mixin.android.ui.qr.SubCaptureManager
-import org.jetbrains.anko.toast
 
 class MainActivity : AppCompatActivity() {
 
-    private val mCaptureManager: SubCaptureManager by lazy {
-        SubCaptureManager(this, zxing_barcode_scanner)
+    private val mCaptureManager: CaptureManager by lazy {
+        CaptureManager(this, zxing_barcode_scanner, captureCallback)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,15 +24,16 @@ class MainActivity : AppCompatActivity() {
         switch_camera.setOnClickListener { zxing_barcode_scanner.switchCamera() }
         op.setCameraOpCallback(object : CameraOpView.CameraOpCallback {
             override fun onClick() {
-//                toast("On click ")
+                mCaptureManager.capture()
             }
 
             override fun onProgressStart() {
                 this@MainActivity.vibrate(longArrayOf(0, 30))
+                mCaptureManager.record()
             }
 
             override fun onProgressStop() {
-//                toast("On Progress stop")
+                mCaptureManager.stopRecord()
             }
 
         })
@@ -62,4 +65,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean =
             zxing_barcode_scanner!!.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
+
+    private val captureCallback = object : CaptureManagerCallback {
+        override fun onScanResult(result: BarcodeResult) {
+        }
+
+        override fun onPreview(sourceData: SourceData) {
+        }
+
+    }
 }

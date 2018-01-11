@@ -71,6 +71,7 @@ public class BarcodeView extends CameraPreview {
                 if (callback != null) {
                     callback.preview(sourceData);
                 }
+                return true;
             }
             return false;
         }
@@ -168,7 +169,7 @@ public class BarcodeView extends CameraPreview {
         stopDecoderThread();
     }
 
-    public void setJustPreview(boolean justPreview) {
+    protected void setJustPreview(boolean justPreview) {
         if (decoderThread != null) {
             decoderThread.setJustPreview(justPreview);
         }
