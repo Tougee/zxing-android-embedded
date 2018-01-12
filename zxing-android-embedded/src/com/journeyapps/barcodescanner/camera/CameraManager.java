@@ -93,6 +93,7 @@ public final class CameraManager {
 
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
+            Log.d("@@@", "CameraManager onPreviewFrame");
             Size cameraResolution = resolution;
             PreviewCallback callback = this.callback;
             if (cameraResolution != null && callback != null) {

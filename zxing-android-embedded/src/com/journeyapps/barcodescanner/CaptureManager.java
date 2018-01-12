@@ -104,6 +104,9 @@ public class CaptureManager {
         @Override
         public void preview(final SourceData sourceData) {
             if (mode == Mode.CAPTURE || mode == Mode.RECORD) {
+                if (mode == Mode.CAPTURE) {
+                    pause();
+                }
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -129,7 +132,6 @@ public class CaptureManager {
 
         @Override
         public void previewStopped() {
-
         }
 
         @Override
@@ -420,9 +422,7 @@ public class CaptureManager {
         } else {
             finishWhenClosed = true;
         }
-
-        barcodeView.pause();
-        inactivityTimer.cancel();
+        pause();
     }
 
     protected void returnResultTimeout() {
@@ -437,8 +437,9 @@ public class CaptureManager {
         onResume();
     }
 
-    public void stopRecord() {
-        closeAndFinish();
+    public void pause() {
+        barcodeView.pause();
+        inactivityTimer.cancel();
     }
 
     protected void displayFrameworkBugMessageAndExit() {
