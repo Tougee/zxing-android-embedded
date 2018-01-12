@@ -414,7 +414,7 @@ public class CaptureManager {
         activity.finish();
     }
 
-    protected void closeAndFinish() {
+    public void closeAndFinish() {
         if (barcodeView.getBarcodeView().isCameraClosed()) {
             finish();
         } else {
@@ -430,6 +430,11 @@ public class CaptureManager {
         intent.putExtra(Intents.Scan.TIMEOUT, true);
         activity.setResult(Activity.RESULT_CANCELED, intent);
         closeAndFinish();
+    }
+
+    public void resume() {
+        decode();
+        onResume();
     }
 
     public void stopRecord() {
