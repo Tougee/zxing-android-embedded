@@ -48,7 +48,13 @@ class EditFragment : Fragment() {
         preview_iv.setImageBitmap(result)
     }
 
+    override fun onPause() {
+        super.onPause()
+        callback.resume()
+    }
+
     interface Callback {
         fun getSourceData(): SourceData
+        fun resume()
     }
 }

@@ -246,6 +246,10 @@ public class DecoratedBarcodeView extends FrameLayout {
         }
     }
 
+    public boolean isFacingBack() {
+        return getBarcodeView().getCameraSettings().getRequestedCameraId() == Camera.CameraInfo.CAMERA_FACING_BACK;
+    }
+
     /**
      * Handles focus, camera, volume up and volume down keys.
      * <p>

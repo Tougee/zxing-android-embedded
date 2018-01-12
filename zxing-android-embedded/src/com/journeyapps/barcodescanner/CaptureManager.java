@@ -255,16 +255,16 @@ public class CaptureManager {
 
     public void capture() {
         mode = Mode.CAPTURE;
-        justPreview();
+        justPreview(true);
     }
 
     public void record() {
         mode = Mode.RECORD;
-        justPreview();
+        justPreview(true);
     }
 
-    private void justPreview() {
-        barcodeView.getBarcodeView().setJustPreview(true);
+    private void justPreview(boolean justPreview) {
+        barcodeView.getBarcodeView().setJustPreview(justPreview);
     }
 
     /**
@@ -440,6 +440,8 @@ public class CaptureManager {
     public void pause() {
         barcodeView.pause();
         inactivityTimer.cancel();
+        mode = Mode.SCAN;
+        justPreview(false);
     }
 
     protected void displayFrameworkBugMessageAndExit() {

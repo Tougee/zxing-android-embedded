@@ -83,6 +83,10 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
         return sourceData!!
     }
 
+    override fun resume() {
+        mCaptureManager.resume()
+    }
+
     private val captureCallback = object : CaptureManagerCallback {
         override fun onScanResult(result: BarcodeResult) {
         }
