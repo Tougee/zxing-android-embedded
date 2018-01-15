@@ -3,12 +3,14 @@ package com.touge.sample
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
+import android.view.WindowManager
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.CaptureManagerCallback
 import com.journeyapps.barcodescanner.SourceData
 import kotlinx.android.synthetic.main.activity_main.*
 import one.mixin.android.ui.qr.EditFragment
+import org.jetbrains.anko.toast
 
 class MainActivity : AppCompatActivity(), EditFragment.Callback {
 
@@ -26,8 +28,11 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val navigationBarHeight = this.navigationBarHeight()
+        op.translationY = -navigationBarHeight.toFloat()
         mCaptureManager.initializeFromIntent(intent, savedInstanceState)
         mCaptureManager.decode()
         close.setOnClickListener { finish() }
@@ -89,6 +94,7 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
 
     private val captureCallback = object : CaptureManagerCallback {
         override fun onScanResult(result: BarcodeResult) {
+            toast("on Scan Result")
         }
 
         override fun onPreview(sourceData: SourceData) {
