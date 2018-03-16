@@ -3,6 +3,7 @@ package com.touge.sample
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
+import android.view.View.VISIBLE
 import android.view.WindowManager
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CaptureManager
@@ -28,7 +29,6 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val navigationBarHeight = this.navigationBarHeight()
