@@ -6,12 +6,12 @@ apply plugin: 'com.jfrog.bintray'
 ext.artifactId = 'zxing-android-embedded'
 
 dependencies {
-    compile project.zxingCore
+    implementation project.zxingCore
 
-    compile 'com.android.support:support-v4:25.1.0'
+    implementation "com.android.support:support-v4:27.1.1"
 
-    testCompile 'junit:junit:4.12'
-    testCompile "org.mockito:mockito-core:1.9.5"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.mockito:mockito-core:2.13.0"
 }
 
 android {
@@ -41,11 +41,15 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
+    lintOptions {
+        abortOnError false
+    }
+
     testOptions {
         // We test with primitives such as Rect, and rely on their default behaviour working.
         unitTests.returnDefaultValues = true
     }
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '27.0.3'
 }
 
 task sourceJar(type: Jar) {

@@ -82,7 +82,6 @@ public class CaptureManager {
     private BarcodeCallback barcodeCallback = new BarcodeCallback() {
         @Override
         public void barcodeResult(final BarcodeResult result) {
-            barcodeView.pause();
             beepManager.playBeepSoundAndVibrate();
 
             handler.post(new Runnable() {
