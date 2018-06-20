@@ -6,6 +6,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -31,7 +34,7 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
     private var circleWidth = -10f  // initial value less than 0 for delay
     private var maxCircleWidth = 0f
     private var circleInterval = 3f
-    private var progressInterval = 2f
+    private var progressInterval = 0.2f
     private var progressStartAngle = -90f
     private var curSweepAngle = 0f
     private var progressRect: RectF? = null
@@ -47,6 +50,34 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
     private var callback: CameraOpCallback? = null
     private val spring = SpringSystem.create().createSpring().apply {
         springConfig = SpringConfig.fromOrigamiTensionAndFriction(80.0, 4.0)
+    }
+
+     private val mHandler by lazy {
+        object :Handler(Looper.getMainLooper()) {
+          override fun handleMessage(msg: Message) {
+            if (msg.what == 1){
+              curSweepAngle+=0.6f
+              invalidate()
+            }
+          }
+        }
+    }
+
+    private val task by lazy {
+      object : Runnable {
+        override fun run() {
+          mHandler.sendEmptyMessage(1)
+          mHandler.postDelayed(this,100)
+        }
+      }
+    }
+
+    private fun start(){
+      task.run()
+    }
+
+    private fun stop(){
+      mHandler.removeCallbacks(task)
     }
 
     private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -109,10 +140,10 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
             canvas.drawCircle(midX, midY, radius * expand, ringPaint)
             canvas.drawArc(progressRect, progressStartAngle, curSweepAngle, false, progressPaint)
             canvas.drawCircle(midX, midY, maxCircleWidth, circlePaint)
-            curSweepAngle += progressInterval
             if (curSweepAngle <= 360 + progressInterval) {
                 invalidate()
             } else {
+                stop()
                 callback?.onProgressStop()
                 clean()
             }
@@ -128,6 +159,7 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
         when (event.action) {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 if (mode == Mode.PROGRESS) {
+                    stop()
                     callback?.onProgressStop()
                 }
                 clean()
@@ -165,6 +197,7 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
         spring.endValue = 1.0
         mode = Mode.PROGRESS
         invalidate()
+        start()
         callback?.onProgressStart()
     }
 

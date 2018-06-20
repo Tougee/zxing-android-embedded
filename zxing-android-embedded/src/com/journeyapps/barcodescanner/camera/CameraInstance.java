@@ -4,10 +4,11 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import android.view.SurfaceHolder;
-
 import com.google.zxing.client.android.R;
 import com.journeyapps.barcodescanner.Size;
 import com.journeyapps.barcodescanner.Util;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Manage a camera instance using a background thread.
@@ -74,6 +75,11 @@ public class CameraInstance {
     public void setSurface(CameraSurface surface) {
         this.surface = surface;
     }
+
+    public CameraSurface getSurface() {
+        return surface;
+    }
+
 
     public CameraSettings getCameraSettings() {
         return cameraSettings;
@@ -273,7 +279,12 @@ public class CameraInstance {
      *
      * @return the surface om which the preview is displayed
      */
-    protected CameraSurface getSurface() {
-        return surface;
+
+    public void startRecord(File file,int width,int height) throws IOException {
+        cameraManager.startRecord(file,width,height);
+    }
+
+    public void stopRecord() {
+      cameraManager.stopRecord();
     }
 }

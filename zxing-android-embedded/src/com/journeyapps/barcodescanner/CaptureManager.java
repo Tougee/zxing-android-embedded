@@ -257,9 +257,14 @@ public class CaptureManager {
         justPreview(true);
     }
 
-    public void record() {
+    public void record(File file) throws IOException {
         mode = Mode.RECORD;
         justPreview(true);
+        barcodeView.getBarcodeView().startRecord(file);
+    }
+
+    public void stopRecord() {
+      barcodeView.getBarcodeView().stopRecord();
     }
 
     private void justPreview(boolean justPreview) {
@@ -282,16 +287,20 @@ public class CaptureManager {
 
     @TargetApi(23)
     private void openCameraWithPermission() {
-        if (ContextCompat.checkSelfPermission(this.activity, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
-            barcodeView.resume();
-        } else if (!askedPermission) {
-            ActivityCompat.requestPermissions(this.activity,
-                    new String[]{Manifest.permission.CAMERA},
-                    cameraPermissionReqCode);
-            askedPermission = true;
-        } else {
-            // Wait for permission result
+      if (ContextCompat.checkSelfPermission(this.activity, Manifest.permission.CAMERA)
+          == PackageManager.PERMISSION_GRANTED
+          && ContextCompat.checkSelfPermission(this.activity, Manifest.permission.RECORD_AUDIO)
+          == PackageManager.PERMISSION_GRANTED
+          && ContextCompat.checkSelfPermission(this.activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+          == PackageManager.PERMISSION_GRANTED) {
+        barcodeView.resume();
+      } else if (!askedPermission) {
+        ActivityCompat.requestPermissions(this.activity,
+            new String[] { Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO , Manifest.permission.WRITE_EXTERNAL_STORAGE},
+            cameraPermissionReqCode);
+        askedPermission = true;
+      } else {
+          // Wait for permission result
         }
     }
 
@@ -306,7 +315,9 @@ public class CaptureManager {
      */
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         if (requestCode == cameraPermissionReqCode) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                && grantResults[1] == PackageManager.PERMISSION_GRANTED
+                && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
                 // permission was granted
                 barcodeView.resume();
             } else {
