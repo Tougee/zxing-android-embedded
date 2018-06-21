@@ -20,17 +20,17 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-
 import com.google.zxing.client.android.R;
 import com.journeyapps.barcodescanner.camera.CameraInstance;
 import com.journeyapps.barcodescanner.camera.CameraSettings;
 import com.journeyapps.barcodescanner.camera.CameraSurface;
 import com.journeyapps.barcodescanner.camera.CenterCropStrategy;
-import com.journeyapps.barcodescanner.camera.FitCenterStrategy;
 import com.journeyapps.barcodescanner.camera.DisplayConfiguration;
+import com.journeyapps.barcodescanner.camera.FitCenterStrategy;
 import com.journeyapps.barcodescanner.camera.FitXYStrategy;
 import com.journeyapps.barcodescanner.camera.PreviewScalingStrategy;
-
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -867,4 +867,15 @@ public class CameraPreview extends ViewGroup {
     public boolean isCameraClosed() {
         return cameraInstance == null || cameraInstance.isCameraClosed();
     }
+  public void startRecord(File file) throws IOException {
+      if(!isCameraClosed()){
+        cameraInstance.startRecord(file,getMeasuredWidth(),getMeasuredHeight());
+      }
+  }
+
+  public void stopRecord() {
+      if(!isCameraClosed()){
+      cameraInstance.stopRecord();
+    }
+  }
 }
