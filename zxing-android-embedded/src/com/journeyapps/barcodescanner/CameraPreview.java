@@ -8,29 +8,12 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.Parcelable;
+import android.os.*;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.TextureView;
-import android.view.ViewGroup;
-import android.view.WindowManager;
-
+import android.view.*;
 import com.google.zxing.client.android.R;
-import com.journeyapps.barcodescanner.camera.CameraInstance;
-import com.journeyapps.barcodescanner.camera.CameraSettings;
-import com.journeyapps.barcodescanner.camera.CameraSurface;
-import com.journeyapps.barcodescanner.camera.CenterCropStrategy;
-import com.journeyapps.barcodescanner.camera.FitCenterStrategy;
-import com.journeyapps.barcodescanner.camera.DisplayConfiguration;
-import com.journeyapps.barcodescanner.camera.FitXYStrategy;
-import com.journeyapps.barcodescanner.camera.PreviewScalingStrategy;
-
+import com.journeyapps.barcodescanner.camera.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -141,6 +124,8 @@ public class CameraPreview extends ViewGroup {
     private PreviewScalingStrategy previewScalingStrategy = null;
 
     private boolean torchOn = false;
+
+    private boolean supportRecord;
 
     @TargetApi(14)
     private TextureView.SurfaceTextureListener surfaceTextureListener() {
@@ -740,6 +725,7 @@ public class CameraPreview extends ViewGroup {
         }
 
         cameraInstance = createCameraInstance();
+        cameraInstance.setSupportRecord(supportRecord);
 
         cameraInstance.setReadyHandler(stateHandler);
         cameraInstance.open();
@@ -802,6 +788,10 @@ public class CameraPreview extends ViewGroup {
      */
     public boolean isPreviewActive() {
         return previewActive;
+    }
+
+    public void setSupportRecord(boolean supportRecord) {
+        this.supportRecord = supportRecord;
     }
 
     /**

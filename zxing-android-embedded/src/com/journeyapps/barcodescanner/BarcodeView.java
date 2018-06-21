@@ -175,6 +175,10 @@ public class BarcodeView extends CameraPreview {
         }
     }
 
+    protected void startRecord(String path) {
+        getCameraInstance().startRecord(path);
+    }
+
     protected DecoderFactory createDefaultDecoderFactory() {
         return new DefaultDecoderFactory();
     }
@@ -214,7 +218,6 @@ public class BarcodeView extends CameraPreview {
     @Override
     public void pause() {
         stopDecoderThread();
-
         super.pause();
     }
 }

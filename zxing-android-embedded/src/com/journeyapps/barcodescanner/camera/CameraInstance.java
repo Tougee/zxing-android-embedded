@@ -1,17 +1,22 @@
 package com.journeyapps.barcodescanner.camera;
 
 import android.content.Context;
+import android.hardware.Camera;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
 import android.os.Handler;
 import android.util.Log;
 import android.view.SurfaceHolder;
-
 import com.google.zxing.client.android.R;
 import com.journeyapps.barcodescanner.Size;
 import com.journeyapps.barcodescanner.Util;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manage a camera instance using a background thread.
- *
+ * <p>
  * All methods must be called from the main thread.
  */
 public class CameraInstance {
@@ -28,9 +33,13 @@ public class CameraInstance {
 
     private CameraSettings cameraSettings = new CameraSettings();
 
+    private MediaRecorder mediaRecorder;
+    private boolean supportRecord;
+    private String recordFile;
+
     /**
      * Construct a new CameraInstance.
-     *
+     * <p>
      * A new CameraManager is created.
      *
      * @param context the Android Context
@@ -101,9 +110,8 @@ public class CameraInstance {
     }
 
     /**
-     *
      * @return the camera rotation relative to display rotation, in degrees. Typically 0 if the
-     *    display is in landscape orientation.
+     * display is in landscape orientation.
      */
     public int getCameraRotation() {
         return cameraManager.getCameraRotation();
@@ -225,11 +233,58 @@ public class CameraInstance {
         }
     };
 
+    private Runnable recordStarter = new Runnable() {
+        @Override
+        public void run() {
+            if (supportRecord && mediaRecorder == null) {
+                try {
+                    Log.d(TAG, "Init mediaRecorder");
+                    mediaRecorder = new MediaRecorder();
+                    Camera camera = cameraManager.getCamera();
+                    List<Size> sizeList = getVideoSizes(camera.getParameters());
+                    camera.unlock();
+                    mediaRecorder.setCamera(camera);
+                    mediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+                    mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+                    mediaRecorder.setOrientationHint(90);
+                    CamcorderProfile camcorderProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+                    Size size = displayConfiguration.getBestPreviewSize(sizeList, true);
+                    if (size != null) {
+                        camcorderProfile.videoFrameWidth = size.width;
+                        camcorderProfile.videoFrameHeight = size.height;
+                        mediaRecorder.setProfile(camcorderProfile);
+                    }
+                    mediaRecorder.setOutputFile(recordFile);
+                } catch (Exception e) {
+                    notifyError(e);
+                    Log.e(TAG, "Failed to init mediaRecorder", e);
+                }
+
+                try {
+                    mediaRecorder.prepare();
+                } catch (IllegalArgumentException e) {
+                    Log.d(TAG, "IllegalStateException preparing MediaRecorder: " + e.getMessage());
+                    releaseMediaRecorder();
+                } catch (IOException e) {
+                    Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
+                    releaseMediaRecorder();
+                }
+
+                try {
+                    mediaRecorder.start();
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to start mediaRecorder", e);
+                }
+            }
+        }
+    };
+
     private Runnable closer = new Runnable() {
         @Override
         public void run() {
             try {
                 Log.d(TAG, "Closing camera");
+                releaseMediaRecorder();
                 cameraManager.stopPreview();
                 cameraManager.close();
             } catch (Exception e) {
@@ -237,9 +292,7 @@ public class CameraInstance {
             }
 
             cameraClosed = true;
-
             readyHandler.sendEmptyMessage(R.id.zxing_camera_closed);
-
             cameraThread.decrementInstances();
         }
     };
@@ -250,19 +303,44 @@ public class CameraInstance {
         }
     }
 
+    private void releaseMediaRecorder() {
+        if (mediaRecorder != null) {
+            mediaRecorder.reset();
+            mediaRecorder.release();
+            mediaRecorder = null;
+            cameraManager.getCamera().lock();
+        }
+    }
+
+    private static List<Size> getVideoSizes(Camera.Parameters parameters) {
+        List<Camera.Size> rawSupportedSizes = parameters.getSupportedPreviewSizes();
+        List<Size> previewSizes = new ArrayList<>();
+        if (rawSupportedSizes == null) {
+            Camera.Size defaultSize = parameters.getPreviewSize();
+            if (defaultSize != null) {
+                // Work around potential platform bugs
+                previewSizes.add(new Size(defaultSize.width, defaultSize.height));
+            }
+            return previewSizes;
+        }
+        for (Camera.Size size : rawSupportedSizes) {
+            previewSizes.add(new Size(size.width, size.height));
+        }
+        return previewSizes;
+    }
+
     /**
      * Returns the CameraManager used to control the camera.
-     *
-     * The CameraManager is not thread-safe, and must only be used from the CameraThread.
+     * <p>
+     * The CameraManager is not thread-safe
      *
      * @return the CameraManager used
      */
-    protected CameraManager getCameraManager() {
+    public CameraManager getCameraManager() {
         return cameraManager;
     }
 
     /**
-     *
      * @return the CameraThread used to manage the camera
      */
     protected CameraThread getCameraThread() {
@@ -270,10 +348,18 @@ public class CameraInstance {
     }
 
     /**
-     *
      * @return the surface om which the preview is displayed
      */
     protected CameraSurface getSurface() {
         return surface;
+    }
+
+    public void setSupportRecord(boolean supportRecord) {
+        this.supportRecord = supportRecord;
+    }
+
+    public void startRecord(String path) {
+        recordFile = path;
+        cameraThread.enqueue(recordStarter);
     }
 }

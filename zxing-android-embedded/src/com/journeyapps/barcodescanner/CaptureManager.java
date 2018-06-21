@@ -20,14 +20,12 @@ import android.view.Display;
 import android.view.Surface;
 import android.view.Window;
 import android.view.WindowManager;
-
 import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.BeepManager;
 import com.google.zxing.client.android.InactivityTimer;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.client.android.R;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -66,6 +64,7 @@ public class CaptureManager {
     private int orientationLock = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
     private static final String SAVED_ORIENTATION_LOCK = "SAVED_ORIENTATION_LOCK";
     private boolean returnBarcodeImagePath = false;
+    private boolean supportRecord;
 
     private boolean destroyed = false;
 
@@ -106,14 +105,6 @@ public class CaptureManager {
                 if (mode == Mode.CAPTURE) {
                     pause();
                 }
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (callback != null) {
-                            callback.onPreview(sourceData);
-                        }
-                    }
-                });
             }
         }
     };
@@ -147,9 +138,15 @@ public class CaptureManager {
         }
     };
 
-    public CaptureManager(Activity activity, DecoratedBarcodeView barcodeView, CaptureManagerCallback callback) {
+    public CaptureManager(Activity activity, DecoratedBarcodeView barcodeView, boolean supportRecord,
+                          CaptureManagerCallback
+                                  callback) {
         this.activity = activity;
         this.barcodeView = barcodeView;
+        this.supportRecord = supportRecord;
+        if (supportRecord) {
+            barcodeView.setSupportRecord();
+        }
         this.callback = callback;
         barcodeView.getBarcodeView().addStateListener(stateListener);
 
@@ -257,8 +254,9 @@ public class CaptureManager {
         justPreview(true);
     }
 
-    public void record() {
+    public void record(String path) {
         mode = Mode.RECORD;
+        barcodeView.getBarcodeView().startRecord(path);
         justPreview(true);
     }
 
@@ -282,17 +280,29 @@ public class CaptureManager {
 
     @TargetApi(23)
     private void openCameraWithPermission() {
-        if (ContextCompat.checkSelfPermission(this.activity, Manifest.permission.CAMERA)
+        if (supportRecord
+                && ContextCompat.checkSelfPermission(this.activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this.activity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this.activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager
+                .PERMISSION_GRANTED) {
+            barcodeView.resume();
+        } else if (!supportRecord && ContextCompat.checkSelfPermission(this.activity, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
             barcodeView.resume();
         } else if (!askedPermission) {
-            ActivityCompat.requestPermissions(this.activity,
-                    new String[]{Manifest.permission.CAMERA},
-                    cameraPermissionReqCode);
+            String[] permissions;
+            if (supportRecord) {
+                permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest
+                        .permission.WRITE_EXTERNAL_STORAGE};
+            } else {
+                permissions = new String[]{Manifest.permission.CAMERA};
+            }
+            ActivityCompat.requestPermissions(this.activity, permissions, cameraPermissionReqCode);
             askedPermission = true;
         } else {
             // Wait for permission result
         }
+
     }
 
     /**
@@ -306,7 +316,9 @@ public class CaptureManager {
      */
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         if (requestCode == cameraPermissionReqCode) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
                 // permission was granted
                 barcodeView.resume();
             } else {

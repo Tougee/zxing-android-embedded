@@ -171,9 +171,6 @@ public class DecoratedBarcodeView extends FrameLayout {
         barcodeView.pauseAndWait();
     }
 
-    /**
-     * @see BarcodeView#resume()
-     */
     public void resume() {
         barcodeView.resume();
     }
@@ -248,6 +245,10 @@ public class DecoratedBarcodeView extends FrameLayout {
 
     public boolean isFacingBack() {
         return getBarcodeView().getCameraSettings().getRequestedCameraId() == Camera.CameraInfo.CAMERA_FACING_BACK;
+    }
+
+    public void setSupportRecord() {
+        barcodeView.setSupportRecord(true);
     }
 
     /**

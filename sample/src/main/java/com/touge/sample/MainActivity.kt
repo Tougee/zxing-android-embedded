@@ -3,8 +3,6 @@ package com.touge.sample
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
-import android.view.View.VISIBLE
-import android.view.WindowManager
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.CaptureManagerCallback
@@ -25,7 +23,7 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
     private var sourceData: SourceData? = null
 
     private val mCaptureManager: CaptureManager by lazy {
-        CaptureManager(this, zxing_barcode_scanner, captureCallback)
+        CaptureManager(this, zxing_barcode_scanner, true, captureCallback)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +43,8 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
 
             override fun onProgressStart() {
                 this@MainActivity.vibrate(longArrayOf(0, 30))
-                mCaptureManager.record()
+                val f = getOutputMediaFile()
+                f?.let { mCaptureManager.record(it.absolutePath) }
                 mode = Mode.RECORD
             }
 
@@ -104,7 +103,6 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
                         .add(R.id.container, EditFragment.newInstance(), EditFragment.TAG)
                         .addToBackStack(null)
                         .commit()
-            } else if (mode == Mode.RECORD) {
             }
         }
 

@@ -31,7 +31,7 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
     private var circleWidth = -10f  // initial value less than 0 for delay
     private var maxCircleWidth = 0f
     private var circleInterval = 3f
-    private var progressInterval = 2f
+    private var progressInterval = .4f
     private var progressStartAngle = -90f
     private var curSweepAngle = 0f
     private var progressRect: RectF? = null
