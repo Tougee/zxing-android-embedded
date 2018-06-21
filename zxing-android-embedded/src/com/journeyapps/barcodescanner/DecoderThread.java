@@ -106,7 +106,6 @@ public class DecoderThread {
     private final PreviewCallback previewCallback = new PreviewCallback() {
         @Override
         public void onPreview(SourceData sourceData) {
-            Log.d("@@@", "DecodeThread onPreview");
             if (justPreview) {
                 if (resultHandler != null) {
                     Message message = Message.obtain(resultHandler, R.id.zxing_just_preview, sourceData);

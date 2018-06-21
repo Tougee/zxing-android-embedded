@@ -8,7 +8,6 @@ import com.google.zxing.client.android.R;
 import com.journeyapps.barcodescanner.Size;
 import com.journeyapps.barcodescanner.Util;
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Manage a camera instance using a background thread.
@@ -26,6 +25,7 @@ public class CameraInstance {
     private DisplayConfiguration displayConfiguration;
     private boolean open = false;
     private boolean cameraClosed = true;
+    private File recordFile;
 
     private CameraSettings cameraSettings = new CameraSettings();
 
@@ -231,6 +231,13 @@ public class CameraInstance {
         }
     };
 
+    private Runnable recordStarter = new Runnable() {
+        @Override
+        public void run() {
+            cameraManager.startRecord(recordFile);
+        }
+    };
+
     private Runnable closer = new Runnable() {
         @Override
         public void run() {
@@ -280,8 +287,9 @@ public class CameraInstance {
      * @return the surface om which the preview is displayed
      */
 
-    public void startRecord(File file,int width,int height) throws IOException {
-        cameraManager.startRecord(file,width,height);
+    public void startRecord(File file) {
+        recordFile = file;
+        cameraThread.enqueue(recordStarter);
     }
 
     public void stopRecord() {
