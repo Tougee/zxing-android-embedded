@@ -517,7 +517,16 @@ public final class CameraManager {
             try {
                 mediaRecorder = new MediaRecorder();
                 List<Size> videoSizes = getPreviewSizes(camera.getParameters(), false);
-                Size size = displayConfiguration.getBestPreviewSize(videoSizes, isCameraRotated());
+                Size size = null;
+                for (int i = 0; i < videoSizes.size(); i++) {
+                  size = videoSizes.get(i);
+                  if (size.width <= 1280 && size.height <= 720) {
+                    break;
+                  }
+                }
+                if (size == null) {
+                    size = displayConfiguration.getBestPreviewSize(videoSizes, isCameraRotated());
+                }
                 camera.unlock();
                 mediaRecorder.setCamera(camera);
 
@@ -525,7 +534,7 @@ public final class CameraManager {
                 mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
                 mediaRecorder.setOrientationHint(90);
-                CamcorderProfile camcorderProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+                CamcorderProfile camcorderProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
                 if (size != null) {
                     camcorderProfile.videoFrameWidth = size.width;
                     camcorderProfile.videoFrameHeight = size.height;
