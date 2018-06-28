@@ -14,7 +14,9 @@ import com.facebook.rebound.SimpleSpringListener
 import com.facebook.rebound.Spring
 import com.facebook.rebound.SpringConfig
 import com.facebook.rebound.SpringSystem
-import org.jetbrains.anko.dip
+import com.touge.sample.CameraOpView.Mode.EXPAND
+import com.touge.sample.CameraOpView.Mode.NONE
+import com.touge.sample.CameraOpView.Mode.PROGRESS
 
 class CameraOpView : View, GestureDetector.OnGestureListener {
 
@@ -26,27 +28,29 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
 
     private var ringColor = Color.WHITE
     private var circleColor = Color.RED
-    private var ringStrokeWidth = dip(5).toFloat()
-    private var progressStrokeWidth = dip(4.5f).toFloat()
-    private var circleWidth = 0f  // initial value less than 0 for delay
+    private var ringStrokeWidth = context.dip(5f)
+    private var progressStrokeWidth = context.dip(4.5f)
+    private var circleWidth = 0f
     private var maxCircleWidth = 0f
     private var circleInterval = 3f
-    private var progressInterval = 0.25f
+    private var progressInterval = 1f
     private var progressStartAngle = -90f
     private var curSweepAngle = 0f
     private var progressRect: RectF? = null
     private var expand = 1.2f
+    private var sprintEndValue = 1.0
     private var radius = 0f
     private var rawRadius = 0f
     private var midX = 0f
     private var midY = 0f
 
-    private var mode = Mode.NONE
+    private var mode = NONE
 
     private val gestureDetector = GestureDetector(context, this)
     private var callback: CameraOpCallback? = null
     private val spring = SpringSystem.create().createSpring().apply {
-        springConfig = SpringConfig.fromOrigamiTensionAndFriction(80.0, 4.0)
+        springConfig = SpringConfig.fromOrigamiTensionAndFriction(300.0, 4.0)
+        endValue = sprintEndValue
     }
 
     private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -72,10 +76,10 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
         spring.addListener(object : SimpleSpringListener() {
             override fun onSpringUpdate(spring: Spring) {
-                val value = spring.currentValue
-                if (value < .8) {
+                if (mode != EXPAND) {
                     return
                 }
+                val value = spring.currentValue
                 radius = value.toFloat() * rawRadius
                 invalidate()
             }
@@ -90,21 +94,22 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
             rawRadius = size / 2
             radius = rawRadius
             maxCircleWidth = radius - ringStrokeWidth
+            circleInterval = maxCircleWidth / (60 * .5f)
             midX = width / 2f
             midY = width / 2f
         }
     }
 
     override fun onDraw(canvas: Canvas) {
-        if (mode == Mode.NONE) {
+        if (mode == NONE) {
             canvas.drawCircle(midX, midY, radius, ringPaint)
-        } else if (mode == Mode.EXPAND) {
+        } else if (mode == EXPAND) {
+            if (circleWidth <= maxCircleWidth) {
+                circleWidth += circleInterval
+            }
             canvas.drawCircle(midX, midY, radius, ringPaint)
             canvas.drawCircle(midX, midY, circleWidth, circlePaint)
-            circleWidth += circleInterval
-            if (circleWidth <= maxCircleWidth) {
-                invalidate()
-            }
+            invalidate()
         } else {
             canvas.drawCircle(midX, midY, radius * expand, ringPaint)
             canvas.drawArc(progressRect, progressStartAngle, curSweepAngle, false, progressPaint)
@@ -127,7 +132,7 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
         }
         when (event.action) {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                if (mode == Mode.PROGRESS) {
+                if (mode == PROGRESS) {
                     callback?.onProgressStop()
                 }
                 clean()
@@ -148,8 +153,8 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
     }
 
     override fun onDown(e: MotionEvent?): Boolean {
-        spring.endValue = 1.2
-        mode = Mode.EXPAND
+        spring.endValue = expand.toDouble()
+        mode = EXPAND
         return true
     }
 
@@ -162,23 +167,30 @@ class CameraOpView : View, GestureDetector.OnGestureListener {
     }
 
     override fun onLongPress(e: MotionEvent?) {
-        spring.endValue = 1.0
-        mode = Mode.PROGRESS
+        mode = PROGRESS
+        spring.endValue = sprintEndValue
+        radius = rawRadius
         invalidate()
         callback?.onProgressStart()
     }
 
     private fun clean() {
-        mode = Mode.NONE
+        mode = NONE
         curSweepAngle = 0f
         circleWidth = -10f
         radius = rawRadius
         invalidate()
     }
 
+    fun setMaxTime(time: Int) {
+        progressInterval = 360f / (60 * time)
+    }
+
     fun setCameraOpCallback(callback: CameraOpCallback) {
         this.callback = callback
     }
+
+    private fun Context.dip(value: Float): Float = (value * resources.displayMetrics.density)
 
     interface CameraOpCallback {
         fun onClick()

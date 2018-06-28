@@ -512,7 +512,7 @@ public final class CameraManager {
     private MediaRecorder mediaRecorder;
 
     @SuppressLint("NewApi")
-    public void startRecord(File file) {
+    public void startRecord(File file, int maxDuration) {
         if (mediaRecorder == null) {
             try {
                 mediaRecorder = new MediaRecorder();
@@ -541,7 +541,7 @@ public final class CameraManager {
                     mediaRecorder.setProfile(camcorderProfile);
                 }
 
-                mediaRecorder.setMaxDuration(60 * 1000);
+                mediaRecorder.setMaxDuration(maxDuration * 1000);
                 mediaRecorder.setOutputFile(file.getAbsolutePath());
             } catch (Exception e) {
                 Log.e(TAG, "Failed to init mediaRecorder", e);

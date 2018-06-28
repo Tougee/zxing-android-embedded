@@ -851,9 +851,9 @@ public class CameraPreview extends ViewGroup {
         return cameraInstance == null || cameraInstance.isCameraClosed();
     }
 
-    public void startRecord(File file) {
+    public void startRecord(File file, int maxDuration) {
         if (!isCameraClosed()) {
-            cameraInstance.startRecord(file);
+            cameraInstance.startRecord(file, maxDuration);
         }
     }
 

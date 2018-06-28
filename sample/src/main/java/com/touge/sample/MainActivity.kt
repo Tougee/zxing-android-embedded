@@ -7,10 +7,7 @@ import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.CaptureManagerCallback
 import com.journeyapps.barcodescanner.SourceData
-import kotlinx.android.synthetic.main.activity_main.close
-import kotlinx.android.synthetic.main.activity_main.op
-import kotlinx.android.synthetic.main.activity_main.switch_camera
-import kotlinx.android.synthetic.main.activity_main.zxing_barcode_scanner
+import kotlinx.android.synthetic.main.activity_main.*
 import one.mixin.android.ui.qr.EditFragment
 import org.jetbrains.anko.toast
 import java.io.File
@@ -47,7 +44,7 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
 
             override fun onProgressStart() {
                 this@MainActivity.vibrate(longArrayOf(0, 30))
-                mCaptureManager.record(File(this@MainActivity.externalCacheDir.path,"demo.mp4"))
+                mCaptureManager.record(File(this@MainActivity.externalCacheDir.path,"demo.mp4"), 15)
                 mode = Mode.RECORD
             }
 

@@ -257,10 +257,10 @@ public class CaptureManager {
         justPreview(true);
     }
 
-    public void record(File file) throws IOException {
+    public void record(File file, int maxDuration) {
         mode = Mode.RECORD;
         justPreview(true);
-        barcodeView.getBarcodeView().startRecord(file);
+        barcodeView.getBarcodeView().startRecord(file, maxDuration);
     }
 
     public void stopRecord() {

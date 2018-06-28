@@ -26,6 +26,7 @@ public class CameraInstance {
     private boolean open = false;
     private boolean cameraClosed = true;
     private File recordFile;
+    private int maxDuration;
 
     private CameraSettings cameraSettings = new CameraSettings();
 
@@ -234,7 +235,7 @@ public class CameraInstance {
     private Runnable recordStarter = new Runnable() {
         @Override
         public void run() {
-            cameraManager.startRecord(recordFile);
+            cameraManager.startRecord(recordFile, maxDuration);
         }
     };
 
@@ -282,13 +283,9 @@ public class CameraInstance {
         return cameraThread;
     }
 
-    /**
-     *
-     * @return the surface om which the preview is displayed
-     */
-
-    public void startRecord(File file) {
+    public void startRecord(File file, int maxDuration) {
         recordFile = file;
+        this.maxDuration = maxDuration;
         cameraThread.enqueue(recordStarter);
     }
 
