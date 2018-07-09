@@ -16,7 +16,7 @@ import java.io.ByteArrayOutputStream
 class EditFragment : Fragment() {
 
     companion object {
-        val TAG = "EditFragment"
+        const val TAG = "EditFragment"
 
         fun newInstance() = EditFragment()
     }
