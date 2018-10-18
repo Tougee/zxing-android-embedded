@@ -9,6 +9,8 @@ import com.google.zxing.DecodeHintType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.R;
 
+import com.journeyapps.barcodescanner.camera.CameraInstance;
+import com.journeyapps.barcodescanner.camera.PreviewCallback;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -169,9 +171,15 @@ public class BarcodeView extends CameraPreview {
         stopDecoderThread();
     }
 
-    protected void setJustPreview(boolean justPreview) {
-        if (decoderThread != null) {
-            decoderThread.setJustPreview(justPreview);
+    protected void setJustPreview(boolean justPreview, BarcodeCallback callback) {
+        CameraInstance cameraInstance = getCameraInstance();
+        if (cameraInstance != null && cameraInstance.isOpen()){
+            if (justPreview) {
+                this.callback = callback;
+                getCameraInstance().requestPreview(previewCallback);
+            } else {
+                this.callback = null;
+            }
         }
     }
 
@@ -217,4 +225,19 @@ public class BarcodeView extends CameraPreview {
 
         super.pause();
     }
+
+    private final PreviewCallback previewCallback = new PreviewCallback() {
+
+        @Override
+        public void onPreview(SourceData sourceData) {
+            if (resultHandler != null) {
+                Message message = Message.obtain(resultHandler, R.id.zxing_just_preview, sourceData);
+                message.sendToTarget();
+            }
+        }
+
+        @Override
+        public void onPreviewError(Exception e) {
+        }
+    };
 }

@@ -252,6 +252,10 @@ public class CaptureManager {
         barcodeView.decodeSingle(barcodeCallback);
     }
 
+    public void decodeContinuous() {
+        barcodeView.decodeContinuous(barcodeCallback);
+    }
+
     public void capture() {
         mode = Mode.CAPTURE;
         justPreview(true);
@@ -268,7 +272,7 @@ public class CaptureManager {
     }
 
     private void justPreview(boolean justPreview) {
-        barcodeView.getBarcodeView().setJustPreview(justPreview);
+        barcodeView.getBarcodeView().setJustPreview(justPreview, barcodeCallback);
     }
 
     /**

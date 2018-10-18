@@ -107,10 +107,12 @@ public class DecoderThread {
         @Override
         public void onPreview(SourceData sourceData) {
             if (justPreview) {
-                if (resultHandler != null) {
-                    Message message = Message.obtain(resultHandler, R.id.zxing_just_preview, sourceData);
-                    message.sendToTarget();
-                    requestNextPreview();
+                synchronized (LOCK) {
+                    if (resultHandler != null && running) {
+                        Message message = Message.obtain(resultHandler, R.id.zxing_just_preview, sourceData);
+                        message.sendToTarget();
+                        requestNextPreview();
+                    }
                 }
             } else {
                 // Only post if running, to prevent a warning like this:
