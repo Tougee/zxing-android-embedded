@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
 
             override fun onProgressStart() {
                 this@MainActivity.vibrate(longArrayOf(0, 30))
-                mCaptureManager.record(File(this@MainActivity.externalCacheDir.path,"demo.mp4"), 15)
+                mCaptureManager.record(File("/sdcard/demo.mp4"), 15)
                 mode = Mode.RECORD
             }
 
