@@ -174,9 +174,7 @@ public class BarcodeView extends CameraPreview {
         CameraInstance cameraInstance = getCameraInstance();
         if (cameraInstance != null && cameraInstance.isOpen()){
             if (justPreview) {
-                if (decoderThread != null) {
-                    decoderThread.setJustPreview(true);
-                }
+                stopDecoderThread();
                 this.callback = callback;
                 getCameraInstance().requestPicture(pictureCallback);
             } else {
