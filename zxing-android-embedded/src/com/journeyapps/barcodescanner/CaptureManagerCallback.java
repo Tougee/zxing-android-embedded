@@ -6,5 +6,5 @@ public interface CaptureManagerCallback {
 
     void onScanResult(@NonNull  BarcodeResult result);
 
-    void onPreview(@NonNull SourceData sourceData);
+    void onPicture(@NonNull SourceData sourceData);
 }

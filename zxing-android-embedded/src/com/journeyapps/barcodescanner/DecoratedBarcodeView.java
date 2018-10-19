@@ -57,8 +57,8 @@ public class DecoratedBarcodeView extends FrameLayout {
         }
 
         @Override
-        public void preview(SourceData sourceData) {
-            delegate.preview(sourceData);
+        public void onPicture(SourceData data) {
+            delegate.onPicture(data);
         }
     }
 

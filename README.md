@@ -26,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.tougee:zxing-android-embedded:3.7.0'
+    compile 'com.github.tougee:zxing-android-embedded:3.8.0'
     compile 'com.android.support:appcompat-v7:23.1.0'   // Version 23+ is required
 }
 

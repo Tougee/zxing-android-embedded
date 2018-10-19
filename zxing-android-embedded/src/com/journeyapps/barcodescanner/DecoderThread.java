@@ -106,15 +106,7 @@ public class DecoderThread {
     private final PreviewCallback previewCallback = new PreviewCallback() {
         @Override
         public void onPreview(SourceData sourceData) {
-            if (justPreview) {
-                synchronized (LOCK) {
-                    if (resultHandler != null && running) {
-                        Message message = Message.obtain(resultHandler, R.id.zxing_just_preview, sourceData);
-                        message.sendToTarget();
-                        requestNextPreview();
-                    }
-                }
-            } else {
+            if (!justPreview) {
                 // Only post if running, to prevent a warning like this:
                 //   java.lang.RuntimeException: Handler (android.os.Handler) sending message to a Handler on a dead thread
 

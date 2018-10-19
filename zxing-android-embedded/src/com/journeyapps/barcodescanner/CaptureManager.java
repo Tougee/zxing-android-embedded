@@ -77,8 +77,6 @@ public class CaptureManager {
 
     private boolean finishWhenClosed = false;
 
-    private Mode mode = Mode.SCAN;
-
     private BarcodeCallback barcodeCallback = new BarcodeCallback() {
         @Override
         public void barcodeResult(final BarcodeResult result) {
@@ -101,20 +99,15 @@ public class CaptureManager {
         }
 
         @Override
-        public void preview(final SourceData sourceData) {
-            if (mode == Mode.CAPTURE || mode == Mode.RECORD) {
-                if (mode == Mode.CAPTURE) {
-                    pause();
-                }
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (callback != null) {
-                            callback.onPreview(sourceData);
-                        }
+        public void onPicture(final SourceData sourceData) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (callback != null) {
+                        callback.onPicture(sourceData);
                     }
-                });
-            }
+                }
+            });
         }
     };
 
@@ -257,12 +250,10 @@ public class CaptureManager {
     }
 
     public void capture() {
-        mode = Mode.CAPTURE;
         justPreview(true);
     }
 
     public void record(File file, int maxDuration) {
-        mode = Mode.RECORD;
         justPreview(true);
         barcodeView.getBarcodeView().startRecord(file, maxDuration);
     }
@@ -454,7 +445,6 @@ public class CaptureManager {
     public void pause() {
         barcodeView.pause();
         inactivityTimer.cancel();
-        mode = Mode.SCAN;
         justPreview(false);
     }
 

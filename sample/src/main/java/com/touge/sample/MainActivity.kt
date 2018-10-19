@@ -2,6 +2,7 @@ package com.touge.sample
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.KeyEvent
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CaptureManager
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
 
     private var mode = Mode.SCAN
     private var sourceData: SourceData? = null
+    private var data: ByteArray? = null
 
     private val mCaptureManager: CaptureManager by lazy {
         CaptureManager(this, zxing_barcode_scanner, captureCallback)
@@ -38,6 +40,7 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
         switch_camera.setOnClickListener { zxing_barcode_scanner.switchCamera() }
         op.setCameraOpCallback(object : CameraOpView.CameraOpCallback {
             override fun onClick() {
+                Log.d("@@@", "onClick")
                 mCaptureManager.capture()
                 mode = Mode.CAPTURE
             }
@@ -88,6 +91,10 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
         return sourceData!!
     }
 
+    override fun getData(): ByteArray {
+        return data!!
+    }
+
     override fun resume() {
         mCaptureManager.resume()
     }
@@ -97,16 +104,12 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
             toast("on Scan Result")
         }
 
-        override fun onPreview(sourceData: SourceData) {
-            if (mode == Mode.CAPTURE) {
-                this@MainActivity.sourceData = sourceData
-                this@MainActivity.supportFragmentManager.beginTransaction()
-                        .add(R.id.container, EditFragment.newInstance(), EditFragment.TAG)
-                        .addToBackStack(null)
-                        .commit()
-            } else if (mode == Mode.RECORD) {
-            }
+        override fun onPicture(sourceData: SourceData) {
+            this@MainActivity.sourceData = sourceData
+            this@MainActivity.supportFragmentManager.beginTransaction()
+                .add(R.id.container, EditFragment.newInstance(), EditFragment.TAG)
+                .addToBackStack(null)
+                .commit()
         }
-
     }
 }

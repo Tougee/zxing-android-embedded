@@ -9,9 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 import com.journeyapps.barcodescanner.SourceData
 import com.touge.sample.R
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_edit.*
 import java.io.ByteArrayOutputStream
-
 
 class EditFragment : Fragment() {
 
@@ -38,13 +38,25 @@ class EditFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val sourceData = callback.getSourceData()
-        val out = ByteArrayOutputStream()
-        val yuvImage = YuvImage(sourceData.data, ImageFormat.NV21, sourceData.dataWidth, sourceData.dataHeight, null)
-        yuvImage.compressToJpeg(Rect(0, 0, sourceData.dataWidth, sourceData.dataHeight), 100, out)
-        val imageBytes = out.toByteArray()
+        val imageBytes = sourceData.data
+        val options = BitmapFactory.Options()
+        options.inJustDecodeBounds = true
+        BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size, options)
+        val w = options.outWidth
+        val h = options.outHeight
+        val ratioW = sourceData.dataWidth.toFloat() / w
+        val ratioH = sourceData.dataWidth.toFloat() / h
+        val ratio: Float = if (ratioW > ratioH) {
+            ratioH
+        } else {
+            ratioW
+        }
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-        val matrix = Matrix().apply { postRotate(sourceData.rotation.toFloat()) }
-        val result = Bitmap.createBitmap(bitmap, 0, 0, sourceData.dataWidth, sourceData.dataHeight, matrix, true)
+        val matrix = Matrix().apply {
+            postRotate(sourceData.rotation.toFloat())
+            postScale(ratio, ratio)
+        }
+        val result = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true)
         preview_iv.setImageBitmap(result)
     }
 
@@ -56,5 +68,6 @@ class EditFragment : Fragment() {
     interface Callback {
         fun getSourceData(): SourceData
         fun resume()
+        fun getData(): ByteArray
     }
 }

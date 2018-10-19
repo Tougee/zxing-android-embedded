@@ -4,13 +4,12 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-
+import android.util.Log;
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.R;
-
 import com.journeyapps.barcodescanner.camera.CameraInstance;
-import com.journeyapps.barcodescanner.camera.PreviewCallback;
+import com.journeyapps.barcodescanner.camera.PictureCallback;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,9 +68,9 @@ public class BarcodeView extends CameraPreview {
                 }
                 return true;
             } else if (message.what == R.id.zxing_just_preview) {
-                SourceData sourceData = (SourceData) message.obj;
+                SourceData data = (SourceData) message.obj;
                 if (callback != null) {
-                    callback.preview(sourceData);
+                    callback.onPicture(data);
                 }
                 return true;
             }
@@ -175,8 +174,11 @@ public class BarcodeView extends CameraPreview {
         CameraInstance cameraInstance = getCameraInstance();
         if (cameraInstance != null && cameraInstance.isOpen()){
             if (justPreview) {
+                if (decoderThread != null) {
+                    decoderThread.setJustPreview(true);
+                }
                 this.callback = callback;
-                getCameraInstance().requestPreview(previewCallback);
+                getCameraInstance().requestPicture(pictureCallback);
             } else {
                 this.callback = null;
             }
@@ -226,18 +228,18 @@ public class BarcodeView extends CameraPreview {
         super.pause();
     }
 
-    private final PreviewCallback previewCallback = new PreviewCallback() {
+    private final PictureCallback pictureCallback = new PictureCallback() {
 
         @Override
-        public void onPreview(SourceData sourceData) {
+        public void onPicture(SourceData data) {
             if (resultHandler != null) {
-                Message message = Message.obtain(resultHandler, R.id.zxing_just_preview, sourceData);
+                Message message = Message.obtain(resultHandler, R.id.zxing_just_preview, data);
                 message.sendToTarget();
             }
         }
 
         @Override
-        public void onPreviewError(Exception e) {
+        public void onPictureError(Exception e) {
         }
     };
 }

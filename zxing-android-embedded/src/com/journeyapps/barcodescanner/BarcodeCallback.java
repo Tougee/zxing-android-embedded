@@ -26,9 +26,5 @@ public interface BarcodeCallback {
      */
     void possibleResultPoints(List<ResultPoint> resultPoints);
 
-    /**
-     * Barcode is in simple preview mode.
-     * @param sourceData camera preview data wrapper
-     */
-    void preview(SourceData sourceData);
+    void onPicture(SourceData sourceData);
 }

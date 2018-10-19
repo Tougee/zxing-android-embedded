@@ -1,6 +1,7 @@
 package com.journeyapps.barcodescanner.camera;
 
 import android.content.Context;
+import android.hardware.Camera;
 import android.os.Handler;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -116,6 +117,10 @@ public class CameraInstance {
         return cameraManager.getCameraRotation();
     }
 
+    public Camera getCamera() {
+        return cameraManager.getCamera();
+    }
+
     public void open() {
         Util.validateMainThread();
 
@@ -179,6 +184,17 @@ public class CameraInstance {
             @Override
             public void run() {
                 cameraManager.requestPreviewFrame(callback);
+            }
+        });
+    }
+
+    public void requestPicture(final PictureCallback callback) {
+        validateOpen();
+
+        cameraThread.enqueue(new Runnable() {
+            @Override
+            public void run() {
+                cameraManager.requestPicture(callback);
             }
         });
     }

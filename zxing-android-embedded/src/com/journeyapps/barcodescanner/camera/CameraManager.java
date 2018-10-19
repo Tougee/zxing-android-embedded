@@ -71,6 +71,8 @@ public final class CameraManager {
     // Actual chosen preview size
     private Size requestedPreviewSize;
     private Size previewSize;
+    private Size requestedPictureSize;
+    private Size pictureSize;
 
     private int rotationDegrees = -1;    // camera rotation vs display rotation
 
@@ -123,15 +125,59 @@ public final class CameraManager {
         }
     }
 
+    private final class CameraPictureCallback implements Camera.PictureCallback {
+        private PictureCallback callback;
+
+        private Size resolution;
+
+        public CameraPictureCallback() {
+        }
+
+        public void setResolution(Size resolution) {
+            this.resolution = resolution;
+        }
+
+        public void setCallback(PictureCallback callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+            Size cameraResolution = resolution;
+            PictureCallback callback = this.callback;
+            if (callback != null) {
+                try {
+                    if (data == null) {
+                        throw new NullPointerException("No preview data received");
+                    }
+                    int format = camera.getParameters().getPreviewFormat();
+                    SourceData source = new SourceData(data, cameraResolution.width, cameraResolution.height, format,
+                            getCameraRotation());
+                    callback.onPicture(source);
+                } catch (RuntimeException e) {
+                    // Could be:
+                    // java.lang.RuntimeException: getParameters failed (empty parameters)
+                    // IllegalArgumentException: Image data does not match the resolution
+                    Log.e(TAG, "Camera preview failed", e);
+                    callback.onPictureError(e);
+                }
+            } else {
+                Log.d(TAG, "Got preview callback, but no handler or resolution available");
+            }
+        }
+    }
+
     /**
      * Preview frames are delivered here, which we pass on to the registered handler. Make sure to
      * clear the handler so it will only receive one message.
      */
     private final CameraPreviewCallback cameraPreviewCallback;
+    private final CameraPictureCallback pictureCallback;
 
     public CameraManager(Context context) {
         this.context = context;
         cameraPreviewCallback = new CameraPreviewCallback();
+        pictureCallback = new CameraPictureCallback();
     }
 
     /**
@@ -206,6 +252,7 @@ public final class CameraManager {
         if (camera != null && previewing) {
             camera.stopPreview();
             cameraPreviewCallback.setCallback(null);
+            pictureCallback.setCallback(null);
             previewing = false;
         }
     }
@@ -298,6 +345,14 @@ public final class CameraManager {
             parameters.setPreviewSize(requestedPreviewSize.width, requestedPreviewSize.height);
         }
 
+        List<Size> pictureSizes = getPictureSizes(parameters);
+        if (pictureSizes.isEmpty()) {
+            requestedPictureSize = null;
+        } else {
+            requestedPictureSize = displayConfiguration.getBestPreviewSize(pictureSizes, isCameraRotated());
+            parameters.setPictureSize(requestedPictureSize.width, requestedPictureSize.height);
+        }
+
         if (Build.DEVICE.equals("glass-1")) {
             // We need to set the FPS on Google Glass devices, otherwise the preview is scrambled.
             // FIXME - can/should we do this for other devices as well?
@@ -330,6 +385,25 @@ public final class CameraManager {
         }
         return previewSizes;
     }
+
+    private static List<Size> getPictureSizes(Camera.Parameters parameters) {
+        List<Camera.Size> rawSupportedSizes;
+        rawSupportedSizes = parameters.getSupportedPictureSizes();
+        List<Size> pictureSizes = new ArrayList<>();
+        if (rawSupportedSizes == null) {
+            Camera.Size defaultSize = parameters.getPictureSize();
+            if (defaultSize != null) {
+                // Work around potential platform bugs
+                pictureSizes.add(new Size(defaultSize.width, defaultSize.height));
+            }
+            return pictureSizes;
+        }
+        for (Camera.Size size : rawSupportedSizes) {
+            pictureSizes.add(new Size(size.width, size.height));
+        }
+        return pictureSizes;
+    }
+
 
     private int calculateDisplayRotation() {
         // http://developer.android.com/reference/android/hardware/Camera.html#setDisplayOrientation(int)
@@ -391,6 +465,14 @@ public final class CameraManager {
             previewSize = new Size(realPreviewSize.width, realPreviewSize.height);
         }
         cameraPreviewCallback.setResolution(previewSize);
+
+        Camera.Size realPictureSize = camera.getParameters().getPictureSize();
+        if (requestedPictureSize != null) {
+            pictureSize = requestedPictureSize;
+        } else {
+            pictureSize = new Size(realPictureSize.width, realPictureSize.height);
+        }
+        pictureCallback.setResolution(pictureSize);
     }
 
     /**
@@ -437,7 +519,16 @@ public final class CameraManager {
         Camera theCamera = camera;
         if (theCamera != null && previewing) {
             cameraPreviewCallback.setCallback(callback);
-            theCamera.setOneShotPreviewCallback(cameraPreviewCallback);
+            theCamera.setPreviewCallback(cameraPreviewCallback);
+            theCamera.startPreview();
+        }
+    }
+
+    public void requestPicture(PictureCallback callback) {
+        Camera theCamera = camera;
+        if (theCamera != null && previewing) {
+            pictureCallback.setCallback(callback);
+            theCamera.takePicture(null, null, pictureCallback);
         }
     }
 
@@ -519,10 +610,10 @@ public final class CameraManager {
                 List<Size> videoSizes = getPreviewSizes(camera.getParameters(), false);
                 Size size = null;
                 for (int i = 0; i < videoSizes.size(); i++) {
-                  size = videoSizes.get(i);
-                  if (size.width <= 1280 && size.height <= 720) {
-                    break;
-                  }
+                    size = videoSizes.get(i);
+                    if (size.width <= 1280 && size.height <= 720) {
+                        break;
+                    }
                 }
                 if (size == null) {
                     size = displayConfiguration.getBestPreviewSize(videoSizes, isCameraRotated());
