@@ -105,6 +105,7 @@ class MainActivity : AppCompatActivity(), EditFragment.Callback {
         }
 
         override fun onPicture(sourceData: SourceData) {
+            mCaptureManager.pause()
             this@MainActivity.sourceData = sourceData
             this@MainActivity.supportFragmentManager.beginTransaction()
                 .add(R.id.container, EditFragment.newInstance(), EditFragment.TAG)

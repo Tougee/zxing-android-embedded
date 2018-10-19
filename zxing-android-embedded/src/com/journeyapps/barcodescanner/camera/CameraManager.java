@@ -519,8 +519,7 @@ public final class CameraManager {
         Camera theCamera = camera;
         if (theCamera != null && previewing) {
             cameraPreviewCallback.setCallback(callback);
-            theCamera.setPreviewCallback(cameraPreviewCallback);
-            theCamera.startPreview();
+            theCamera.setOneShotPreviewCallback(cameraPreviewCallback);
         }
     }
 

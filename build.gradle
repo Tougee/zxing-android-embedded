@@ -27,7 +27,7 @@ subprojects {
         maven { url 'https://jitpack.io' }
     }
 
-    version = '3.8.0'
+    version = '3.8.1'
     group = 'com.journeyapps'
 
     ext.androidBuildTools = '27.0.3'
